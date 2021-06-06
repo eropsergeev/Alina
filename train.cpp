@@ -35,7 +35,7 @@ float get_treshold(vector<float> powers) {
     auto high = powers.begin() + powers.size() / 10 * 9;
     nth_element(powers.begin(), low, powers.end());
     nth_element(powers.begin(), high, powers.end());
-    return *low + (*low - *high) * 0.2;
+    return *low + (*high - *low) * 0.2;
 }
 
 void split(const vector<float> &samples, vector<vector<Tensor<float, FREQ_TO - FREQ_FROM>>> &ans) {
@@ -82,8 +82,10 @@ int main(int argc, char **argv) {
             file.load(string(argv[1]) + "/" + file_meta["path"].get<string>());
             assert(file.getSampleRate() == SAMPLE_RATE);
             if (!file_meta["regions"].is_null()) {
+                cout << file_meta["regions"] << endl;
                 for (auto reg : file_meta["regions"]) {
-                    vec.emplace_back(file.samples[0].begin() + reg[0], file.samples[0].begin() + reg[1]);
+                    vec.emplace_back();
+                    spectrogram<FREQ_FROM, FREQ_TO>(file.samples[0].begin() + reg[0], file.samples[0].begin() + reg[1], vec.back().begin());
                 }
             } else {
                 split(file.samples[0], vec);
