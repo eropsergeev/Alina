@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
             if (!file_meta["regions"].is_null()) {
                 cout << file_meta["regions"] << endl;
                 for (auto reg : file_meta["regions"]) {
-                    vec.emplace_back();
+                    vec.emplace_back((reg[1] - reg[0]) / (WINDOW_SIZE / 2) - 1);
                     spectrogram<FREQ_FROM, FREQ_TO>(file.samples[0].begin() + reg[0], file.samples[0].begin() + reg[1], vec.back().begin());
                 }
             } else {
