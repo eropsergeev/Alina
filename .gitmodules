@@ -1,0 +1,3 @@
+[submodule "fastrnn"]
+	path = fastrnn
+	url = https://github.com/eropsergeev/fastrnn
