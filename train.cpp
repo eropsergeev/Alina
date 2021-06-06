@@ -63,6 +63,7 @@ void split(const vector<float> &samples, vector<vector<Tensor<float, FREQ_TO - F
             transform(spect.begin() + last, spect.begin() + i, ans.back().begin(), [](auto &x) {
                 return x.template subtensor<FREQ_FROM, FREQ_TO>();
             });
+            last = i;
         }
     }
 }
