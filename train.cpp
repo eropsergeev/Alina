@@ -3,18 +3,21 @@
 #include <complex>
 #include <algorithm>
 #include <vector>
+#include <random>
 #include <type_traits>
 #include <unistd.h>
 #include <nlohmann/json.hpp>
 #include <AudioFile.h>
 #include "fft.hpp"
 #include "fastrnn/tensor.hpp"
+#include "alina_net.hpp"
 
 using namespace std;
 using namespace fastrnn;
 
 const unsigned SAMPLE_RATE = 16000;
 const unsigned WINDOW_SIZE = 128;
+const unsigned TRAIN_SERIES_LEN = 20;
 const unsigned FREQ_FROM = 3, FREQ_TO = 43;
 
 template<unsigned freq_from, unsigned freq_to, class BidirIt, class OutIt>
@@ -69,12 +72,12 @@ void split(const vector<float> &samples, vector<vector<Tensor<float, FREQ_TO - F
 }
 
 int main(int argc, char **argv) {
-    if (argc < 3) {
-        cerr << "Specify dataset directory and output weights files pattern\n";
+    if (argc < 4) {
+        cerr << "Specify dataset directory, output weights files pattern and epochs count\n";
         return 1;
     }
+    int epochs = strtol(argv[3], nullptr, 10);
     auto meta = nlohmann::json::parse(ifstream(string(argv[1]) + "meta.json"));
-    cout << meta << "\n";
     vector<vector<Tensor<float, FREQ_TO - FREQ_FROM>>> positive, negative;
     for (auto &x : meta.items()) {
         auto &vec = (x.key().substr(0, 3) == "pos" ? positive : negative);
@@ -83,7 +86,6 @@ int main(int argc, char **argv) {
             file.load(string(argv[1]) + "/" + file_meta["path"].get<string>());
             assert(file.getSampleRate() == SAMPLE_RATE);
             if (!file_meta["regions"].is_null()) {
-                cout << file_meta["regions"] << endl;
                 for (auto reg : file_meta["regions"]) {
                     vec.emplace_back((reg[1].get<int>() - reg[0].get<int>()) / (WINDOW_SIZE / 2) - 1);
                     spectrogram<FREQ_FROM, FREQ_TO>(file.samples[0].begin() + reg[0], file.samples[0].begin() + reg[1], vec.back().begin());
@@ -93,5 +95,59 @@ int main(int argc, char **argv) {
             }
         }
     }
-    cout << positive.size() << " " << negative.size() << "\n";
+    cout << positive.size() << " positive and " << negative.size() << "negative samples" << endl;
+    vector<vector<Tensor<float, FREQ_TO - FREQ_FROM>>> X_val, X_train;
+    vector<bool> y_val, y_train;
+    mt19937 rnd(42);
+    for (auto &v : positive) {
+        for (auto &x : v) {
+            auto s = accumulate(x.begin(), x.end(), 0.0f);
+            if (s < 1e-5)
+                s = 1e-5;
+            x /= s;
+        }
+    }
+    for (auto &v : negative) {
+        for (auto &x : v) {
+            auto s = accumulate(x.begin(), x.end(), 0.0f);
+            if (s < 1e-5)
+                s = 1e-5;
+            x /= s;
+        }
+    }
+    for (auto &x : positive) {
+        if (rnd() % 10) {
+            X_train.emplace_back(move(x));
+            y_train.emplace_back(1);
+        } else {
+            X_val.emplace_back(move(x));
+            y_val.emplace_back(1);
+        }
+    }
+    for (auto &x : negative) {
+        if (rnd() % 10) {
+            X_train.emplace_back(move(x));
+            y_train.emplace_back(0);
+        } else {
+            X_val.emplace_back(move(x));
+            y_val.emplace_back(0);
+        }
+    }
+    init(777);
+    for (size_t i = 0; i < X_train.size(); ++i) {
+        add_data(X_train[i][0].data(), X_train[i].size(), y_train[i]);
+    }
+    nlohmann::json report;
+    for (int i = 0; i < epochs; ++i) {
+        shuffle();
+        size_t iters = X_train.size() / TRAIN_SERIES_LEN;
+        float *losses = new float[iters];
+        train_epoch(0, TRAIN_SERIES_LEN, losses);
+        nlohmann::json iteration_report;
+        iteration_report["train_loss"] = accumulate(losses, losses + iters, 0.0) / iters;
+        cerr << "Epoch #" << i << ":\n";
+        cerr << "train loss = " << iteration_report["train_loss"].get<double>() << "\n";
+        report.push_back(iteration_report);
+    }
+    cout << report.dump() << "\n";
 }
