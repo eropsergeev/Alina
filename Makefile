@@ -2,6 +2,11 @@ CXXFLAGS = -std=c++20 -Wall -Werror -pthread -march=native -D_GNU_SOURCE -fpic
 
 CXX = g++-10
 
+all: train main
+
+main: main.o alina_net.o fastrnn/static.cpp
+	$(CXX) -o main main.o alina_net.o fastrnn/static.cpp -lasound -lvosk -ldl -lpthread
+
 train: train.o alina_net.o fastrnn/static.cpp
 	$(CXX) -o train train.o alina_net.o fastrnn/static.cpp
 
@@ -19,3 +24,5 @@ train.o: train.cpp fft.hpp fastrnn/tensor.hpp fastrnn/executer.hpp \
  fastrnn/barrier.hpp fastrnn/sysinfo.hpp alina_net.hpp
 alina_net.o: alina_net.hpp fastrnn/tensor.hpp fastrnn/executer.hpp \
  fastrnn/barrier.hpp fastrnn/sysinfo.hpp
+main.o: main.cpp fft.hpp fastrnn/tensor.hpp fastrnn/executer.hpp \
+ fastrnn/barrier.hpp fastrnn/sysinfo.hpp sound_reader.hpp skills.hpp
