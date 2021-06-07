@@ -98,6 +98,7 @@ int main(int argc, char **argv) {
     cout << positive.size() << " positive and " << negative.size() << "negative samples" << endl;
     vector<vector<Tensor<float, FREQ_TO - FREQ_FROM>>> X_val, X_train;
     vector<bool> y_val, y_train;
+    size_t y_val_total_positive = 0;
     mt19937 rnd(42);
     for (auto &v : positive) {
         for (auto &x : v) {
@@ -122,6 +123,7 @@ int main(int argc, char **argv) {
         } else {
             X_val.emplace_back(move(x));
             y_val.emplace_back(1);
+            y_val_total_positive++;
         }
     }
     for (auto &x : negative) {
@@ -147,6 +149,33 @@ int main(int argc, char **argv) {
         iteration_report["train_loss"] = accumulate(losses, losses + iters, 0.0) / iters;
         cerr << "Epoch #" << i << ":\n";
         cerr << "train loss = " << iteration_report["train_loss"].get<double>() << "\n";
+        vector<pair<float, bool>> results;
+        results.reserve(y_val.size());
+        for (size_t i = 0; i < y_val.size(); ++i) {
+            results.emplace_back(apply_to(X_val[i][0].data(), X_val[i].size(), nullptr), y_val[i]);
+        }
+        sort(results.begin(), results.end());
+        vector<float> precisions, recalls, tresholds;
+        precisions.reserve(y_val.size() + 1);
+        recalls.reserve(y_val.size() + 1);
+        tresholds.reserve(y_val.size());
+        size_t tp = y_val_total_positive, fp = y_val.size() - y_val_total_positive, fn = 0;
+        for (auto [tres, true_res] : results) {
+            tresholds.emplace_back(tres);
+            precisions.emplace_back((float) tp / (tp + fp));
+            recalls.emplace_back((float) tp / (tp + fn));
+            if (true_res) {
+                --tp;
+                ++fn;
+            } else {
+                --fp;
+            }
+        }
+        precisions.emplace_back(1);
+        recalls.emplace_back(0);
+        iteration_report["precisions"] = precisions;
+        iteration_report["recalls"] = recalls;
+        iteration_report["tresholds"] = tresholds;
         report.push_back(iteration_report);
     }
     cout << report.dump() << "\n";
