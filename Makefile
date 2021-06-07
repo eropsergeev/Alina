@@ -2,11 +2,11 @@ CXXFLAGS = -std=c++20 -Wall -Werror -pthread -march=native -D_GNU_SOURCE -fpic
 
 CXX = g++-10
 
-train: train.cpp fastrnn/*
-	$(CXX) -o train train.cpp fastrnn/static.cpp alina_net.cpp $(CXXFLAGS) -Ofast
+train: train.o alina_net.o fastrnn/static.cpp
+	$(CXX) -o train train.o alina_net.o fastrnn/static.cpp
 
-alina_net.so: alina_net.o
-	$(CXX) -o alina_net.so alina_net.o fastrnn/static.cpp -shared -Ofast
+alina_net.so: alina_net.o fastrnn/static.cpp
+	$(CXX) -o alina_net.so alina_net.o fastrnn/static.cpp -shared
 
 %.o: %.cpp
 	$(CXX) -c -o $@ $< $(CXXFLAGS) -Ofast
