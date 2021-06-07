@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
             }
         }
     }
-    cout << positive.size() << " positive and " << negative.size() << "negative samples" << endl;
+    cerr << positive.size() << " positive and " << negative.size() << "negative samples" << endl;
     vector<vector<Tensor<float, FREQ_TO - FREQ_FROM>>> X_val, X_train;
     vector<bool> y_val, y_train;
     size_t y_val_total_positive = 0;
@@ -145,10 +145,14 @@ int main(int argc, char **argv) {
         size_t iters = X_train.size() / TRAIN_SERIES_LEN;
         float *losses = new float[iters];
         train_epoch(0, TRAIN_SERIES_LEN, losses);
+        char buf[PATH_MAX];
+        snprintf(buf, sizeof(buf), argv[2], i);
+        cerr << buf << "\n";
+        save_to_file(buf);
         nlohmann::json iteration_report;
         iteration_report["train_loss"] = accumulate(losses, losses + iters, 0.0) / iters;
         cerr << "Epoch #" << i << ":\n";
-        cerr << "train loss = " << iteration_report["train_loss"].get<double>() << "\n";
+        cerr << "train loss = " << iteration_report["train_loss"].get<double>() << endl;
         vector<pair<float, bool>> results;
         results.reserve(y_val.size());
         for (size_t i = 0; i < y_val.size(); ++i) {
