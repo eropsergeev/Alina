@@ -19,5 +19,3 @@ train.o: train.cpp fft.hpp fastrnn/tensor.hpp fastrnn/executer.hpp \
  fastrnn/barrier.hpp fastrnn/sysinfo.hpp alina_net.hpp
 alina_net.o: alina_net.hpp fastrnn/tensor.hpp fastrnn/executer.hpp \
  fastrnn/barrier.hpp fastrnn/sysinfo.hpp
-fft.o: fft.hpp fastrnn/tensor.hpp fastrnn/executer.hpp \
- fastrnn/barrier.hpp fastrnn/sysinfo.hpp
