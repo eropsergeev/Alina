@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <nlohmann/json.hpp>
 #include <AudioFile.h>
+#include <linux/limits.h>
 #include "fft.hpp"
 #include "fastrnn/tensor.hpp"
 #include "alina_net.hpp"
