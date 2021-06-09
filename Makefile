@@ -26,3 +26,4 @@ alina_net.o: alina_net.hpp fastrnn/tensor.hpp fastrnn/executer.hpp \
  fastrnn/barrier.hpp fastrnn/sysinfo.hpp
 main.o: main.cpp fft.hpp fastrnn/tensor.hpp fastrnn/executer.hpp \
  fastrnn/barrier.hpp fastrnn/sysinfo.hpp sound_reader.hpp skills.hpp
+ 

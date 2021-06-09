@@ -19,14 +19,10 @@
 #include "fft.hpp"
 #include "sound_reader.hpp"
 #include "skills.hpp"
+#include "alina_net.hpp"
 
 using namespace std;
 using namespace fastrnn;
-
-extern "C" float apply_to(float *arr, size_t s, float *out);
-extern "C" void load_from_file(const char *);
-
-float apply_once(const Tensor<float, 40> &x, Tensor<float, 128> &h);
 
 int main(int argc, char **argv) {
     if (argc < 4) {
