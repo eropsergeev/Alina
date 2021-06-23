@@ -17,7 +17,7 @@
 
 using namespace fastrnn;
 
-TensorAllocator<float, (size_t) 1 << 28, true> alloc;
+TensorAllocator<float, (size_t) 1 << 20, true> alloc;
 
 template<size_t n, class Executer = StaticExecuter<1>>
 void add_cross_entropy_loss(

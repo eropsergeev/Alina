@@ -55,7 +55,6 @@ int main(int argc, char **argv) {
             string re;
             ifstream in("skills/" + x);
             getline(in, re);
-            cout << re << endl;
             if (binary_search(files.begin(), files.end(), x.substr(0, x.size() - 3))) {
                 skills.emplace_back(make_unique<FileSkill>(regex(re), "skills/" + x.substr(0, x.size() - 3)));
             } else if (binary_search(files.begin(), files.end(), x.substr(0, x.size() - 3) + ".so")) {
@@ -89,9 +88,10 @@ int main(int argc, char **argv) {
                 final = vosk_recognizer_accept_waveform_s(recognizer, p, n);
             }
             auto result = nlohmann::json::parse(vosk_recognizer_final_result(recognizer));
+            std::cerr << result << endl;
             const string keyword = "алина";
             for (auto &x : result["alternatives"]) {
-                if (x["text"].get<string>().substr(0, keyword.size()) == keyword) {
+                if (x["text"].get<string>().find(keyword) != string::npos) {
                     for (auto &s : skills)
                         s->check_and_apply(x["text"]);
                     break;
